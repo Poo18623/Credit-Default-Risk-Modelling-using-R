@@ -1,4 +1,4 @@
-# Credit-Default-Risk-Modelling-using-R
+# Credit-Default-Risk-Modelling-for Lending Club Data using-R
 Includes the following algorithms
 Logistic Regression
 Random Forest
