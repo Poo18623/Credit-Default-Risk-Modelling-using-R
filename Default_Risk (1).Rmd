@@ -16,7 +16,7 @@ library(C50)
 ```
 
 ```{r}
-loans <- read.csv("D:/HCU/Semester 3/Financial Analytics/loan_data.csv", header = TRUE)
+loans <- read.csv("D:/HCU/Semester 3/Financial Analytics/loans.csv", header = TRUE)
 ```
 
 ```{r}
