@@ -3,6 +3,16 @@ title: "Default_Risk"
 author: "R Studio - Practice-1"
 date: "18 November 2019"
 output: html_document
+
+
+Includes the following algorithms
+Logistic Regression
+Random Forest
+Support Vector Machine
+Gradient Boosting
+Artificial Neural Networks
+Discriminant Analysis
+Bagging (Bagged CART)
 ---
 
 ```{r}
