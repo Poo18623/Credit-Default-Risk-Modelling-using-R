@@ -1,0 +1,222 @@
+---
+title: "Default_Risk"
+author: "R Studio - Practice-1"
+date: "18 November 2019"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(caret)
+library(caTools)
+library(e1071)
+library(nnet)
+library(MASS)
+library(C50)
+```
+
+```{r}
+loans <- read.csv("D:/HCU/Semester 3/Financial Analytics/loan_data.csv", header = TRUE)
+```
+
+```{r}
+loans
+```
+
+```{r}
+colnames(loans)
+```
+
+```{r}
+loans$credit.policy <- as.factor(loans$credit.policy)
+loans$not.fully.paid <- as.factor(loans$not.fully.paid)
+loans$pub.rec <- ifelse(loans$pub.rec==1,1,0)
+loans$pub.rec <- as.factor(loans$pub.rec)
+```
+
+```{r}
+summary(loans)
+```
+
+```{r}
+index = createDataPartition(y = loans$not.fully.paid, p = 0.70)[[1]]
+loans.test <- loans[-index,]
+loans.train <- loans[index,]
+```
+
+Logistic Regression:
+
+```{r}
+lgr <- glm(not.fully.paid ~., data=loans.train, family = "binomial")
+summary(lgr)
+```
+
+```{r}
+lgr_prob <- predict(lgr,newdata = loans.test, type = "response")
+lgr_pred <- ifelse(lgr_prob > 0.5, 1, 0)
+lgr_pred <- data.frame(lgr_pred)
+head(lgr_pred)
+```
+
+```{r}
+comp_lgr <- table(lgr_pred$lgr_pred, loans.test$not.fully.paid)
+comp_lgr
+```
+
+```{r}
+cm_lgr <- confusionMatrix(comp_lgr)
+cm_lgr
+```
+
+Random Forest classifier
+
+```{r}
+library(randomForest)
+require(caTools)
+```
+
+```{r}
+rf <- randomForest(not.fully.paid ~ ., data=loans.train)
+rf
+```
+
+```{r}
+rf_pred = predict(rf, newdata=loans.test)
+rf_pred <- as.data.frame(rf_pred)
+head(rf_pred)
+```
+
+```{r}
+comp_rf <- table(rf_pred$rf_pred, loans.test$not.fully.paid)
+comp_rf
+```
+
+```{r}
+cm_rf <- confusionMatrix(comp_rf)
+cm_rf
+```
+
+```{r}
+svm <- svm(not.fully.paid ~ ., data = loans.train)
+svm
+```
+
+```{r}
+svm_pred <- predict(svm, newdata = loans.test)
+svm_pred <- as.data.frame(svm_pred)
+head(svm_pred)
+```
+
+```{r}
+comp_svm <- table(svm_pred$svm_pred, loans.test$not.fully.paid)
+comp_svm
+```
+
+```{r}
+cm_svm <- confusionMatrix(comp_svm)
+cm_svm
+```
+
+Artificial Neural Network
+
+```{r}
+ann <- nnet(not.fully.paid ~.,size=2,data=loans.train)
+ann
+```
+
+```{r}
+ann_pred <- predict(ann, newdata = loans.test)
+ann_pred <- as.data.frame(ann_pred)
+ann_pred$V1 <- ifelse(ann_pred$V1>0.5,1,0)
+ann_pred$V1 <- as.factor(ann_pred$V1)
+head(ann_pred)
+```
+
+```{r}
+comp_ann <- table(ann_pred$V1,loans.test$not.fully.paid)
+comp_ann
+```
+
+```{r}
+cm_ann <- confusionMatrix(ann_pred$V1,loans.test$not.fully.paid)
+cm_ann
+```
+
+Gradient Boosting
+
+```{r}
+grb <- caret::train(not.fully.paid ~ .,data = loans.train,method = "gbm",preProcess = c("scale", "center"),
+                          trControl = trainControl(method = "repeatedcv",number = 5,repeats = 3, verboseIter = FALSE),
+                          verbose = 0)
+grb
+```
+
+```{r}
+grb_pred <- predict(grb,newdata = loans.test)
+grb_pred <- as.data.frame(grb_pred)
+head(grb_pred)
+```
+
+```{r}
+comp_grb <- table(grb_pred$grb_pred,loans.test$not.fully.paid)
+comp_grb
+```
+
+```{r}
+cm_grb <- confusionMatrix(comp_grb)
+cm_grb
+```
+
+Discriminant Analysis
+
+```{r}
+dta <- lda(not.fully.paid ~., data=loans.train)
+dta
+```
+
+```{r}
+dta_pred <- predict(dta, newdata = loans.test)
+dta_pred <- as.data.frame(dta_pred$class)
+names(dta_pred) <- "class"
+head(dta_pred)
+```
+
+```{r}
+comp_dta <- table(dta_pred$class, loans.test$not.fully.paid)
+comp_dta
+```
+
+```{r}
+cm_dta <- confusionMatrix(comp_dta)
+cm_dta
+```
+
+Bagged CART
+
+```{r}
+bag <- train(not.fully.paid~., data=loans.train, method="treebag", metric="Accuracy",
+             trControl=trainControl(method="repeatedcv", number=10, repeats=3))
+bag
+```
+
+```{r}
+bag_pred <- predict(bag, newdata = loans.test)
+bag_pred <- as.data.frame(bag_pred)
+head(bag_pred)
+```
+
+```{r}
+comp_bag <- table(bag_pred$bag_pred, loans.test$not.fully.paid)
+comp_bag
+```
+
+```{r}
+cm_bag <- confusionMatrix(comp_bag)
+cm_bag
+```
+
+```{r}
+Final_Stats <- data.frame("Method" = c("Logistic Regression","Random Forest Classifier","Support Vector Machine","Artificial Neural Network","Gradient Boosting","Discriminant Analysis","Bagged CART"),"Accuracy" = c(cm_lgr$overall[1], cm_rf$overall[1],cm_svm$overall[1],cm_ann$overall[1],cm_grb$overall[1],cm_dta$overall[1],cm_bag$overall[1]))
+Final_Stats <- Final_Stats[order(Final_Stats$Accuracy, decreasing = TRUE),]
+Final_Stats
+```
